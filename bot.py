@@ -36,7 +36,7 @@ def run_flask():
     health_app.run(host="0.0.0.0", port=port)
 
 # ================== Бот ==================
-bot = Bot(token=BOT_TOKEN, parse_mode=HTML)
+bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
 
 # ================== Helpers ==================
