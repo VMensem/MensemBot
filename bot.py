@@ -10,7 +10,7 @@ from aiogram.enums import ParseMode
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # ================== Конфиг ==================
-BOT_TOKEN = os.environ.get("BOT_TOKEN")  # Render env var
+BOT_TOKEN = "8170191285:AAFu9e0VGeeJYjYbTTaenuMeiT6zZTyVliQ"
 CREATOR_ID = 1951437901
 
 admins = set([CREATOR_ID])
