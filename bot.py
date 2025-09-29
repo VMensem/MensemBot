@@ -36,7 +36,7 @@ def run_flask():
     health_app.run(host="0.0.0.0", port=port)
 
 # ================== Бот ==================
-bot = Bot(token=BOT_TOKEN, default=types.DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
 dp = Dispatcher()
 
 # ================== Helpers ==================
@@ -142,10 +142,14 @@ async def cmd_unadmin(message: types.Message):
 
 @dp.message(Command("staff"))
 async def cmd_staff(message: types.Message):
-    staff_list = [f"👑 Создатель: {CREATOR_ID}"]
+    staff_list = [f"👑 Создатель: {get_user_display(message.from_user) if message.from_user.id==CREATOR_ID else CREATOR_ID}"]
     for uid in admins:
         if uid != CREATOR_ID:
-            staff_list.append(f"🔑 Админ: <a href='tg://user?id={uid}'>ID {uid}</a>")
+            try:
+                user = await bot.get_chat(uid)
+                staff_list.append(f"🔑 Админ: {get_user_display(user)}")
+            except:
+                staff_list.append(f"🔑 Админ: ID {uid}")
     await message.answer("\n".join(staff_list))
 
 @dp.message(Command("botstats"))
