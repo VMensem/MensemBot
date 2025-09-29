@@ -6,8 +6,9 @@ from flask import Flask, Response
 
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
-from aiogram.enums import ParseMode
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 
 # ================== Конфиг ==================
 BOT_TOKEN = "8170191285:AAFu9e0VGeeJYjYbTTaenuMeiT6zZTyVliQ"
@@ -36,7 +37,10 @@ def run_flask():
     health_app.run(host="0.0.0.0", port=port)
 
 # ================== Бот ==================
-bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
+bot = Bot(
+    token=BOT_TOKEN,
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+)
 dp = Dispatcher()
 
 # ================== Helpers ==================
