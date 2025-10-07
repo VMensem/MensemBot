@@ -221,6 +221,79 @@ async def cmd_botstats(message: types.Message):
         return
     await message.answer(f"📊 Bot stats:\nAdmins: {len(admins)}\nIdeaChat: {idea_chat_id}")
 
+#============ Мут командс
+from datetime import timedelta
+
+def parse_duration(duration_str: str) -> timedelta:
+    """Парсит строку формата '10m', '2h', '1d'"""
+    try:
+        num = int(''.join(filter(str.isdigit, duration_str)))
+        if "h" in duration_str:
+            return timedelta(hours=num)
+        elif "d" in duration_str:
+            return timedelta(days=num)
+        else:
+            return timedelta(minutes=num)
+    except:
+        return timedelta(minutes=10)  # по умолчанию 10 минут
+
+@dp.message(Command("mute"))
+async def cmd_mute(message: types.Message):
+    if not message.chat.type.endswith("group"):
+        return await message.answer("⚠️ Команда доступна только в группах.")
+    if not isAdmin(message.from_user.id):
+        return await message.answer("❌ У тебя нет прав на использование этой команды.")
+    if not message.reply_to_message:
+        return await message.answer("⚠️ Ответь на сообщение пользователя, чтобы замутить его.")
+
+    args = message.text.split()
+    duration = parse_duration(args[1]) if len(args) > 1 else timedelta(minutes=10)
+    until_date = message.date + duration
+    user_id = message.reply_to_message.from_user.id
+
+    try:
+        await bot.restrict_chat_member(
+            chat_id=message.chat.id,
+            user_id=user_id,
+            permissions=types.ChatPermissions(can_send_messages=False),
+            until_date=until_date
+        )
+
+        time_str = (
+            f"{duration.days} дн." if duration.days > 0 else
+            f"{duration.seconds // 3600} ч." if duration.seconds >= 3600 else
+            f"{duration.seconds // 60} мин."
+        )
+        await message.answer(
+            f"🔇 Пользователь {message.reply_to_message.from_user.mention_html()} замучен на {time_str}.",
+            parse_mode="HTML"
+        )
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при попытке замутить: {e}")
+
+@dp.message(Command("unmute"))
+async def cmd_unmute(message: types.Message):
+    if not message.chat.type.endswith("group"):
+        return await message.answer("⚠️ Команда доступна только в группах.")
+    if not isAdmin(message.from_user.id):
+        return await message.answer("❌ У тебя нет прав на использование этой команды.")
+    if not message.reply_to_message:
+        return await message.answer("⚠️ Ответь на сообщение пользователя, чтобы размутить его.")
+
+    user_id = message.reply_to_message.from_user.id
+    try:
+        await bot.restrict_chat_member(
+            chat_id=message.chat.id,
+            user_id=user_id,
+            permissions=types.ChatPermissions(can_send_messages=True)
+        )
+        await message.answer(
+            f"🔊 Пользователь {message.reply_to_message.from_user.mention_html()} размучен.",
+            parse_mode="HTML"
+        )
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при размуте: {e}")
+
 # ================== /shop с фото ==================
 @dp.message(Command("shop"))
 async def cmd_shop(message: types.Message):
