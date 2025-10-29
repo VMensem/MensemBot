@@ -89,7 +89,107 @@ health_app = Flask(__name__)
 
 @health_app.route("/", methods=["GET"])
 def index():
-    return Response("✅MensemBot - успешно запущен, и работает 24/7", mimetype="text/plain")
+    return """
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bot • Статус</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100vh;
+                background: radial-gradient(circle at top, #200, #000);
+                color: #fff;
+                font-family: 'Segoe UI', sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                overflow: hidden;
+            }
+
+            .glow {
+                font-size: 3em;
+                font-weight: 700;
+                color: #ff1b1b;
+                text-shadow: 0 0 15px #ff1b1b, 0 0 40px #ff1b1b55;
+                animation: pulse 2.5s infinite alternate;
+            }
+
+            @keyframes pulse {
+                0% { text-shadow: 0 0 15px #ff1b1b, 0 0 30px #ff1b1b55; }
+                100% { text-shadow: 0 0 35px #ff1b1b, 0 0 70px #ff1b1b99; }
+            }
+
+            .status-box {
+                margin-top: 25px;
+                padding: 15px 25px;
+                border: 2px solid #ff1b1b66;
+                border-radius: 10px;
+                background: rgba(0, 0, 0, 0.35);
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+                animation: fadeIn 1.5s ease;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(15px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            .status {
+                font-size: 1.2em;
+                color: #ccc;
+                margin-top: 10px;
+            }
+
+            footer {
+                position: absolute;
+                bottom: 15px;
+                font-size: 0.9em;
+                color: #777;
+            }
+
+            a {
+                color: #ff4747;
+                text-decoration: none;
+                transition: 0.3s;
+            }
+
+            a:hover {
+                color: #fff;
+                text-shadow: 0 0 8px #ff1b1b;
+            }
+
+            .pulse-dot {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                background: #ff1b1b;
+                border-radius: 50%;
+                box-shadow: 0 0 10px #ff1b1b;
+                animation: blink 1.5s infinite;
+            }
+
+            @keyframes blink {
+                0%, 100% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.3; transform: scale(0.7); }
+            }
+        </style>
+    </head>
+    <body>
+        <h1 class="glow">🔥 Робот Активен</h1>
+        <div class="status-box">
+            <p class="status">Состояние: <span class="pulse-dot"></span> Работает 24/7</p>
+            <p>Проверка соединения выполнена успешно.</p>
+        </div>
+        <footer>© 2025 <a href="https://mensem.fun" target="_blank">Mensem.Fun</a> — by Vladyslav</footer>
+    </body>
+    </html>
+    """
 
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
