@@ -85,7 +85,9 @@ p.s. Дальше сами думайте кикие правила делать
 idea_chat_id = "-1002473077041"
 
 # ================== Flask ==================
+# ================== Flask ==================
 health_app = Flask(__name__)
+CORS(health_app)  # ✅ Разрешаем запросы с других доменов
 
 @health_app.route("/", methods=["GET"])
 def index():
@@ -109,9 +111,7 @@ def index():
                 align-items: center;
                 justify-content: center;
                 text-align: center;
-                overflow: hidden;
             }
-
             .glow {
                 font-size: 3em;
                 font-weight: 700;
@@ -119,12 +119,10 @@ def index():
                 text-shadow: 0 0 15px #ff1b1b, 0 0 40px #ff1b1b55;
                 animation: pulse 2.5s infinite alternate;
             }
-
             @keyframes pulse {
                 0% { text-shadow: 0 0 15px #ff1b1b, 0 0 30px #ff1b1b55; }
                 100% { text-shadow: 0 0 35px #ff1b1b, 0 0 70px #ff1b1b99; }
             }
-
             .status-box {
                 margin-top: 25px;
                 padding: 15px 25px;
@@ -132,38 +130,8 @@ def index():
                 border-radius: 10px;
                 background: rgba(0, 0, 0, 0.35);
                 box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
-                animation: fadeIn 1.5s ease;
             }
-
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(15px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-
-            .status {
-                font-size: 1.2em;
-                color: #ccc;
-                margin-top: 10px;
-            }
-
-            footer {
-                position: absolute;
-                bottom: 15px;
-                font-size: 0.9em;
-                color: #777;
-            }
-
-            a {
-                color: #ff4747;
-                text-decoration: none;
-                transition: 0.3s;
-            }
-
-            a:hover {
-                color: #fff;
-                text-shadow: 0 0 8px #ff1b1b;
-            }
-
+            .status { font-size: 1.2em; color: #ccc; margin-top: 10px; }
             .pulse-dot {
                 display: inline-block;
                 width: 12px;
@@ -173,11 +141,13 @@ def index():
                 box-shadow: 0 0 10px #ff1b1b;
                 animation: blink 1.5s infinite;
             }
-
             @keyframes blink {
                 0%, 100% { opacity: 1; transform: scale(1); }
                 50% { opacity: 0.3; transform: scale(0.7); }
             }
+            footer { position: absolute; bottom: 15px; font-size: 0.9em; color: #777; }
+            a { color: #ff4747; text-decoration: none; transition: 0.3s; }
+            a:hover { color: #fff; text-shadow: 0 0 8px #ff1b1b; }
         </style>
     </head>
     <body>
@@ -190,6 +160,11 @@ def index():
     </body>
     </html>
     """
+
+# 🔍 Технический эндпоинт для проверки состояния (для сайта Mensem.Fun)
+@health_app.route("/status", methods=["GET"])
+def status():
+    return jsonify({"status": "ok", "bot": "MensemBot"}), 200
 
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
