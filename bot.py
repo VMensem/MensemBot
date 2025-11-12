@@ -2,7 +2,9 @@
 import os
 import asyncio
 import threading
-from flask import Flask, Response
+from datetime import timedelta
+from flask import Flask, jsonify
+from flask_cors import CORS
 
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
@@ -13,81 +15,81 @@ from aiogram.enums import ParseMode
 # ================== Конфиг ==================
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CREATOR_ID = 1951437901
+ADMIN_ID = CREATOR_ID
 
 admins = set([CREATOR_ID])
+idea_chat_id = -1002473077041
+
 texts = {
     "start": """👋 Привет! Я MensemBot.
-ℹ️ Информация - /info
-📜 Правила - /rules
-📊 Цены на ранги - /rank
-✅ Остальные команды - /help
+ℹ️ Информация - /minfo
+📜 Правила - /mrules
+📊 Цены на ранги - /mrank
+✅ Остальные команды - /mhelp
 
 🛡Discord сервер: https://mensem.fun/discord
 🎀 Общий чат: https://t.me/mensem_barone
 📕Barone Family: https://t.me/baronefam
 📘Mensem Club: https://t.me/+sl5f-AkJBmFiZjgy
-    """,
+""",
     "info": """ℹ️ Информация
-👋Привет, данный бот создан специально для 📙Barone Family и 📘Mensem Club
-✅ Создатель бота и семей - @vladlotto - обращайтесь к нему по всем вопросам!
+👋 Привет! Этот бот создан специально для 📙Barone Family и 📘Mensem Club.  
+✅ Создатель бота и семей — @vladlotto  
 
-🛡Discord сервер: https://mensem.fun/discord
-🎀 Общий чат: https://t.me/mensem_barone
-📕Barone Family: https://t.me/baronefam
-📘Mensem Club: https://t.me/+sl5f-AkJBmFiZjgy
+🛡Discord сервер: https://mensem.fun/discord  
+🎀 Общий чат: https://t.me/mensem_barone  
+📕Barone Family: https://t.me/baronefam  
+📘Mensem Club: https://t.me/+sl5f-AkJBmFiZjgy  
 
-💂‍♂️Лидеры: @Sergei_Chapaev / @DoneBarone
-🥷Заместители:  @Santa_Chapaev / @Cobalt228 / @vladlotto / @Paradise_Lin / @Studenticks
-    """,
+💂‍♂️Лидеры: @Sergei_Chapaev / @DoneBarone  
+🥷Заместители: @Santa_Chapaev / @Cobalt228 / @vladlotto / @Paradise_Lin / @Studenticks
+""",
     "rank": """📊 Цены на ранги 
-    💵Barone Family:
-2  - 2кк либо вступить в группу
+💵Barone Family:
+2 - 2кк либо вступить в группу
 3 - 3кк
 4 - 4кк
-5 - 5кк или фулл випка ( адд и премка ), либо промокод
+5 - 5кк или фулл випка (адд и премка), либо промокод
 6 - 6кк
 7 - 7кк
 8 - 8кк либо смена ника на Barone или Mensem
 💶Mensem Club:
 3 - 3кк
 4 - 4кк
-5 - 5кк или  промокод
+5 - 5кк или промокод
 6 - 6кк
-7 - Есле есть адд или премиум вип
-8 - Долго находится в фаме или сменить ник на Mensem
+7 - Если есть адд или премиум вип
+8 - Долго в фаме или ник Mensem
 """,
     "rules": """📜 Правила
 Первое и самое главное правило!
-Если хоть 1 пидарас из вас напишет какую-то хуету, сразу в ЧСФ
-p.s. Дальше сами думайте кикие правила делать!
+Если хоть один напишет хуету — сразу ЧСФ.
+p.s. Остальные правила решаем сами.
 """,
     "help": """❓ Доступные команды: 
-🧩 /help - Команды
-✅ /start - Запуск Бота
-ℹ️ /info - Информация
-📜 /rules - Правила
-📊 /rank - Цены на ранги
-💵 /shop - Купить ранг
-🆔 /id - Посмотреть свой ID
-🎀 /idea - Отправить идею/жалобу руководству
+🧩 /mhelp — Команды
+✅ /mstart — Запуск бота
+ℹ️ /minfo — Информация
+📜 /mrules — Правила
+📊 /mrank — Цены на ранги
+💵 /mshop — Купить ранг (в личке)
+🆔 /mid — Посмотреть свой ID
+🎀 /midea — Отправить идею/жалобу
 """,
-    "shop": """Чтобы подать заявку на ранг
-Вам нужно отправить фото(скриншот) того как вы пополнили семейный счёт на определённую сумму из /rank
-И в подпись к фото добавить текст
+    "shop": """Чтобы подать заявку на ранг:
+Отправь фото (скриншот) пополнения семейного счёта из /mrank  
+и добавь подпись:
 
-Пример:
-Ник: Vlad_Mensem
-Семья: Mensem
-Ранг: 5
+Ник: Vlad_Mensem  
+Семья: Mensem  
+Ранг: 5  
 Док-ва: Скриншот пополнения счёта
-""",
+"""
 }
-idea_chat_id = "-1002473077041"
 
-# ================== Flask ==================
 # ================== Flask ==================
 health_app = Flask(__name__)
-CORS(health_app)  # ✅ Разрешаем запросы с других доменов
+CORS(health_app)
 
 @health_app.route("/", methods=["GET"])
 def index():
@@ -97,7 +99,7 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Bot • Статус</title>
+        <title>MensemBot • Статус</title>
         <style>
             body {
                 margin: 0;
@@ -151,7 +153,7 @@ def index():
         </style>
     </head>
     <body>
-        <h1 class="glow">🔥 Робот Активен</h1>
+        <h1 class="glow">🔥 MensemBot Активен</h1>
         <div class="status-box">
             <p class="status">Состояние: <span class="pulse-dot"></span> Работает 24/7</p>
             <p>Проверка соединения выполнена успешно.</p>
@@ -161,7 +163,6 @@ def index():
     </html>
     """
 
-# 🔍 Технический эндпоинт для проверки состояния (для сайта Mensem.Fun)
 @health_app.route("/status", methods=["GET"])
 def status():
     return jsonify({"status": "ok", "bot": "MensemBot"}), 200
@@ -170,245 +171,128 @@ def run_flask():
     port = int(os.environ.get("PORT", 8080))
     health_app.run(host="0.0.0.0", port=port)
 
-# ================== Бот ==================
-bot = Bot(
-    token=BOT_TOKEN,
-    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-)
+# ================== Telegram ==================
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()
 
-# ================== Helpers ==================
-def isCreator(user_id: int) -> bool:
-    return user_id == CREATOR_ID
+def isCreator(uid): return uid == CREATOR_ID
+def isAdmin(uid): return uid in admins
+def get_user_display(u): return f"{u.full_name} (@{u.username})" if u.username else u.full_name
 
-def isAdmin(user_id: int) -> bool:
-    return user_id in admins
+# ================== Основные ==================
+@dp.message(Command("mstart"))
+async def start_cmd(m): await m.answer(texts["start"])
 
-def get_user_display(user: types.User) -> str:
-    return f"{user.full_name} (@{user.username})" if user.username else user.full_name
+@dp.message(Command("minfo"))
+async def info_cmd(m): await m.answer(texts["info"])
 
-# ================== Основные команды ==================
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    await message.answer(texts["start"])
+@dp.message(Command("mrank"))
+async def rank_cmd(m): await m.answer(texts["rank"])
 
-@dp.message(Command("info"))
-async def cmd_info(message: types.Message):
-    await message.answer(texts["info"])
+@dp.message(Command("mrules"))
+async def rules_cmd(m): await m.answer(texts["rules"])
 
-@dp.message(Command("rank"))
-async def cmd_rank(message: types.Message):
-    await message.answer(texts["rank"])
+@dp.message(Command("mhelp"))
+async def help_cmd(m): await m.answer(texts["help"])
 
-@dp.message(Command("rules"))
-async def cmd_rules(message: types.Message):
-    await message.answer(texts["rules"])
+@dp.message(Command("mid"))
+async def id_cmd(m): await m.answer(f"Ваш ID: <code>{m.from_user.id}</code>")
 
-@dp.message(Command("help"))
-async def cmd_help(message: types.Message):
-    await message.answer(texts["help"])
-
-@dp.message(Command("id"))
-async def cmd_id(message: types.Message):
-    await message.answer(f"Ваш ID: <code>{message.from_user.id}</code>")
-
-# ================== Админские команды ==================
-async def set_text_cmd(message: types.Message, key: str):
-    if not isAdmin(message.from_user.id):
-        return await message.answer("❌ Недостаточно прав.")
-    parts = message.text.split(" ", 1)
-    if len(parts) < 2:
-        return await message.answer("⚠️ Укажи текст.")
+# ================== Админские ==================
+async def set_text_cmd(m, key):
+    if not isAdmin(m.from_user.id): return await m.answer("❌ Недостаточно прав.")
+    parts = m.text.split(" ", 1)
+    if len(parts) < 2: return await m.answer("⚠️ Укажи текст.")
     texts[key] = parts[1]
-    await message.answer(f"✅ {key} обновлён.")
+    await m.answer(f"✅ {key} обновлён.")
 
-@dp.message(Command("setstart"))
-async def cmd_setstart(message: types.Message):
-    await set_text_cmd(message, "start")
+for cmd, key in {
+    "msetstart": "start",
+    "msetinfo": "info",
+    "msetrank": "rank",
+    "msetrules": "rules",
+    "msethelp": "help",
+    "msetshop": "shop"
+}.items():
+    dp.message.register(lambda m, k=key: asyncio.create_task(set_text_cmd(m, k)), Command(cmd))
 
-@dp.message(Command("setinfo"))
-async def cmd_setinfo(message: types.Message):
-    await set_text_cmd(message, "info")
-
-@dp.message(Command("setrank"))
-async def cmd_setrank(message: types.Message):
-    await set_text_cmd(message, "rank")
-
-@dp.message(Command("setrules"))
-async def cmd_setrules(message: types.Message):
-    await set_text_cmd(message, "rules")
-
-@dp.message(Command("sethelp"))
-async def cmd_sethelp(message: types.Message):
-    await set_text_cmd(message, "help")
-
-@dp.message(Command("setshop"))
-async def cmd_setshop(message: types.Message):
-    await set_text_cmd(message, "shop")
-
-@dp.message(Command("setideachat"))
-async def cmd_setideachat(message: types.Message):
-    global idea_chat_id
-    if not isAdmin(message.from_user.id):
-        return await message.answer("❌ Недостаточно прав.")
-    parts = message.text.split(" ", 1)
-    if len(parts) < 2 or not parts[1].isdigit():
-        return await message.answer("⚠️ Укажи ID чата.")
-    idea_chat_id = int(parts[1])
-    await message.answer(f"✅ Чат идей обновлён: {idea_chat_id}")
-
-@dp.message(Command("addadmin"))
-async def cmd_addadmin(message: types.Message):
-    if not isCreator(message.from_user.id):
-        return await message.answer("❌ Только создатель может добавлять админов.")
-    if not message.reply_to_message:
-        return await message.answer("⚠️ Ответь на сообщение пользователя, чтобы выдать админку.")
-    uid = message.reply_to_message.from_user.id
+@dp.message(Command("maddadmin"))
+async def addadmin(m):
+    if not isCreator(m.from_user.id): return await m.answer("❌ Только создатель.")
+    if not m.reply_to_message: return await m.answer("⚠️ Ответь на сообщение пользователя.")
+    uid = m.reply_to_message.from_user.id
     admins.add(uid)
-    await message.answer(f"✅ {get_user_display(message.reply_to_message.from_user)} теперь админ.")
+    await m.answer(f"✅ {get_user_display(m.reply_to_message.from_user)} теперь админ.")
 
-@dp.message(Command("unadmin"))
-async def cmd_unadmin(message: types.Message):
-    if not isCreator(message.from_user.id):
-        return await message.answer("❌ Только создатель может снимать админку.")
-    if not message.reply_to_message:
-        return await message.answer("⚠️ Ответь на сообщение пользователя, чтобы снять админку.")
-    uid = message.reply_to_message.from_user.id
+@dp.message(Command("munadmin"))
+async def unadmin(m):
+    if not isCreator(m.from_user.id): return await m.answer("❌ Только создатель.")
+    if not m.reply_to_message: return await m.answer("⚠️ Ответь на сообщение пользователя.")
+    uid = m.reply_to_message.from_user.id
     if uid in admins:
         admins.remove(uid)
-        await message.answer(f"❌ {get_user_display(message.reply_to_message.from_user)} больше не админ.")
+        await m.answer(f"❌ {get_user_display(m.reply_to_message.from_user)} снят с админов.")
 
-@dp.message(Command("staff"))
-async def cmd_staff(message: types.Message):
-    staff_list = [f"👑 Создатель: {get_user_display(message.from_user) if message.from_user.id==CREATOR_ID else CREATOR_ID}"]
+@dp.message(Command("mstaff"))
+async def staff(m):
+    text = [f"👑 Создатель: {CREATOR_ID}"]
     for uid in admins:
         if uid != CREATOR_ID:
-            try:
-                user = await bot.get_chat(uid)
-                staff_list.append(f"🔑 Админ: {get_user_display(user)}")
-            except:
-                staff_list.append(f"🔑 Админ: ID {uid}")
-    await message.answer("\n".join(staff_list))
+            text.append(f"🔑 Админ: {uid}")
+    await m.answer("\n".join(text))
 
-@dp.message(Command("botstats"))
-async def cmd_botstats(message: types.Message):
-    if not isCreator(message.from_user.id):
-        return
-    await message.answer(f"📊 Bot stats:\nAdmins: {len(admins)}\nIdeaChat: {idea_chat_id}")
+# ================== mute / unmute ==================
+@dp.message(Command("mmute"))
+async def mute_cmd(m):
+    if not m.chat.type.endswith("group"): return await m.answer("⚠️ Только в группе.")
+    if not isAdmin(m.from_user.id): return await m.answer("❌ Нет прав.")
+    if not m.reply_to_message: return await m.answer("⚠️ Ответь на сообщение.")
+    args = m.text.split()
+    duration = timedelta(minutes=int(args[1].replace("m",""))) if len(args)>1 else timedelta(minutes=10)
+    until_date = m.date + duration
+    await bot.restrict_chat_member(m.chat.id, m.reply_to_message.from_user.id,
+                                   permissions=types.ChatPermissions(can_send_messages=False),
+                                   until_date=until_date)
+    await m.answer("🔇 Замучен!")
 
-#============ Мут командс
-from datetime import timedelta
+@dp.message(Command("munmute"))
+async def unmute_cmd(m):
+    if not m.chat.type.endswith("group"): return await m.answer("⚠️ Только в группе.")
+    if not isAdmin(m.from_user.id): return await m.answer("❌ Нет прав.")
+    if not m.reply_to_message: return await m.answer("⚠️ Ответь на сообщение.")
+    await bot.restrict_chat_member(m.chat.id, m.reply_to_message.from_user.id,
+                                   permissions=types.ChatPermissions(can_send_messages=True))
+    await m.answer("🔊 Размучен!")
 
-def parse_duration(duration_str: str) -> timedelta:
-    """Парсит строку формата '10m', '2h', '1d'"""
-    try:
-        num = int(''.join(filter(str.isdigit, duration_str)))
-        if "h" in duration_str:
-            return timedelta(hours=num)
-        elif "d" in duration_str:
-            return timedelta(days=num)
-        else:
-            return timedelta(minutes=num)
-    except:
-        return timedelta(minutes=10)  # по умолчанию 10 минут
-
-@dp.message(Command("mute"))
-async def cmd_mute(message: types.Message):
-    if not message.chat.type.endswith("group"):
-        return await message.answer("⚠️ Команда доступна только в группах.")
-    if not isAdmin(message.from_user.id):
-        return await message.answer("❌ У тебя нет прав на использование этой команды.")
-    if not message.reply_to_message:
-        return await message.answer("⚠️ Ответь на сообщение пользователя, чтобы замутить его.")
-
-    args = message.text.split()
-    duration = parse_duration(args[1]) if len(args) > 1 else timedelta(minutes=10)
-    until_date = message.date + duration
-    user_id = message.reply_to_message.from_user.id
-
-    try:
-        await bot.restrict_chat_member(
-            chat_id=message.chat.id,
-            user_id=user_id,
-            permissions=types.ChatPermissions(can_send_messages=False),
-            until_date=until_date
-        )
-
-        time_str = (
-            f"{duration.days} дн." if duration.days > 0 else
-            f"{duration.seconds // 3600} ч." if duration.seconds >= 3600 else
-            f"{duration.seconds // 60} мин."
-        )
-        await message.answer(
-            f"🔇 Пользователь {message.reply_to_message.from_user.mention_html()} замучен на {time_str}.",
-            parse_mode="HTML"
-        )
-    except Exception as e:
-        await message.answer(f"❌ Ошибка при попытке замутить: {e}")
-
-@dp.message(Command("unmute"))
-async def cmd_unmute(message: types.Message):
-    if not message.chat.type.endswith("group"):
-        return await message.answer("⚠️ Команда доступна только в группах.")
-    if not isAdmin(message.from_user.id):
-        return await message.answer("❌ У тебя нет прав на использование этой команды.")
-    if not message.reply_to_message:
-        return await message.answer("⚠️ Ответь на сообщение пользователя, чтобы размутить его.")
-
-    user_id = message.reply_to_message.from_user.id
-    try:
-        await bot.restrict_chat_member(
-            chat_id=message.chat.id,
-            user_id=user_id,
-            permissions=types.ChatPermissions(can_send_messages=True)
-        )
-        await message.answer(
-            f"🔊 Пользователь {message.reply_to_message.from_user.mention_html()} размучен.",
-            parse_mode="HTML"
-        )
-    except Exception as e:
-        await message.answer(f"❌ Ошибка при размуте: {e}")
-
-# ================== /shop с фото ==================
-@dp.message(Command("shop"))
-async def cmd_shop(message: types.Message):
-    if message.chat.type != "private":
-        return await message.answer("⚠️ Магазин доступен только в личке с ботом.")
-    await message.answer(texts["shop"])
+# ================== /mshop ==================
+@dp.message(Command("mshop"))
+async def shop_cmd(m):
+    if m.chat.type != "private": return await m.answer("⚠️ Только в личке.")
+    await m.answer(texts["shop"])
 
 @dp.message(F.photo)
-async def handle_shop_order(message: types.Message):
-    if message.chat.type != "private":
-        return
-    if not message.caption:
-        return await message.answer("❌ Добавь подпись к фото (например: Ник: Vlad_Mensem, Семья: Mensem , Ранг: 5, Доказательства: Скрин).")
-    if not idea_chat_id:
-        return await message.answer("❌ Чат идей не настроен.")
-
+async def photo_handler(m):
+    if m.chat.type != "private": return
+    if not m.caption: return await m.answer("⚠️ Добавь подпись.")
     kb = InlineKeyboardBuilder()
-    kb.button(text="✅ Выдано", callback_data=f"approve:{message.from_user.id}")
-    kb.button(text="❌ Отказано", callback_data=f"deny:{message.from_user.id}")
+    kb.button(text="✅ Выдано", callback_data=f"approve:{m.from_user.id}")
+    kb.button(text="❌ Отказано", callback_data=f"deny:{m.from_user.id}")
+    await bot.send_photo(idea_chat_id, m.photo[-1].file_id,
+                         caption=f"🛒 Новая заявка:\n\n{m.caption}\n\nОт: {get_user_display(m.from_user)}",
+                         reply_markup=kb.as_markup())
+    await m.answer("✅ Заявка отправлена руководству.")
 
-    await bot.send_photo(
-        idea_chat_id,
-        photo=message.photo[-1].file_id,
-        caption=f"🛒 Новая заявка из /shop:\n\n{message.caption}\n\nОт: {get_user_display(message.from_user)}",
-        reply_markup=kb.as_markup()
-    )
-    await message.answer("✅ Заявка отправлена руководству, ожидай ответа.")
-
-# ================== Callbacks ==================
 @dp.callback_query(F.data.startswith("approve"))
-async def cb_approve(callback: types.CallbackQuery):
-    user_id = int(callback.data.split(":")[1])
-    await bot.send_message(user_id, "✅ Твоя заявка в /shop одобрена!")
-    await callback.answer("Выдано!")
+async def cb_approve(cb):
+    uid = int(cb.data.split(":")[1])
+    await bot.send_message(uid, "✅ Твоя заявка одобрена!")
+    await cb.answer("Выдано!")
 
 @dp.callback_query(F.data.startswith("deny"))
-async def cb_deny(callback: types.CallbackQuery):
-    user_id = int(callback.data.split(":")[1])
-    await bot.send_message(user_id, "❌ Твоя заявка в /shop отклонена.")
-    await callback.answer("Отказано!")
+async def cb_deny(cb):
+    uid = int(cb.data.split(":")[1])
+    await bot.send_message(uid, "❌ Твоя заявка отклонена.")
+    await cb.answer("Отказано!")
 
 # ================== MAIN ==================
 async def main():
